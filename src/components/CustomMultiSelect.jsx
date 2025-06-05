@@ -69,19 +69,19 @@ const CustomMultiSelect = ({ options = [], allowCreate = false, queryKey = 'valo
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (selectedOptions.length > 0) {
-      const joined = selectedOptions
-        .map((opt) => encodeURIComponent(opt.value))
-        .join('+');
-      params.set(queryKey, joined);
-    } else {
-      params.delete(queryKey);
+    const joined = selectedOptions.map((opt) => encodeURIComponent(opt.value)).join('+');
+    const current = params.get(queryKey);
+
+    if (joined !== current) {
+      if (selectedOptions.length > 0) {
+        params.set(queryKey, joined);
+      } else {
+        params.delete(queryKey);
+      }
+
+      const newUrl = window.location.pathname + '?' + params.toString() + window.location.hash;
+      window.history.replaceState({}, '', newUrl);
     }
-
-    const newUrl =
-      window.location.pathname + '?' + params.toString() + window.location.hash;
-
-    window.history.replaceState({}, '', newUrl);
   }, [selectedOptions, queryKey]);
 
   const handleChange = (newValue, actionMeta) => {
@@ -136,7 +136,7 @@ const CustomMultiSelect = ({ options = [], allowCreate = false, queryKey = 'valo
         isMulti
         ref={selectRef}
         value={selectedOptions}
-        onChange={(val, meta) => handleChange(val, meta)}
+        onChange={handleChange}
         inputValue={inputValue}
         onInputChange={setInputValue}
         onKeyDown={handleKeyDown}

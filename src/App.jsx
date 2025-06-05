@@ -46,18 +46,22 @@ function App() {
       setValoresSelecionados(novosValores);
     };
 
-    atualizarValores();
+    atualizarValores(); // valor inicial
 
-    const interval = setInterval(() => {
-      atualizarValores();
-    }, 300);
+    const interval = setInterval(atualizarValores, 500); // atualiza a cada 500ms
 
     return () => clearInterval(interval);
   }, [filtros]);
 
+  const labels = {
+    frutas: 'Frutas (pode criar)',
+    cores: 'Cores favoritas',
+    animais: 'Animais preferidos',
+    paises: 'Países visitados',
+  };
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'Arial, sans-serif' }}>
-      {/* Sidebar */}
       <aside
         style={{
           width: '300px',
@@ -70,7 +74,7 @@ function App() {
         {Object.entries(filtros).map(([chave, opcoes]) => (
           <div key={chave} style={{ marginBottom: '20px' }}>
             <label style={{ fontWeight: 'bold' }}>
-              {chave[0].toUpperCase() + chave.slice(1)}
+              {labels[chave] || chave[0].toUpperCase() + chave.slice(1)}
             </label>
             <CustomMultiSelect
               options={opcoes}
@@ -81,7 +85,6 @@ function App() {
         ))}
       </aside>
 
-      {/* Conteúdo principal */}
       <main style={{ flex: 1, padding: '40px' }}>
         <h1>Valores Selecionados</h1>
         <pre
