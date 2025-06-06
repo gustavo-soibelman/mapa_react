@@ -4,13 +4,12 @@ import 'leaflet/dist/leaflet.css';
 import Papa from 'papaparse';
 import estadosCSV from '../data/estados.csv?raw';
 
-const MapaBrasil = () => {
+const MapaBrasil = ({ estadosVisiveis = [] }) => {
   const [geojsons, setGeojsons] = useState([]);
   const centerBrasil = [-14.235, -51.9253];
   const zoomInicial = 4;
 
   useEffect(() => {
-    // Carrega metadados do CSV
     const estadosMeta = Papa.parse(estadosCSV, {
       header: true,
       skipEmptyLines: true,
@@ -21,14 +20,12 @@ const MapaBrasil = () => {
       mapaCodigos[linha.codigo_uf] = linha.UF;
     });
 
-    // Carrega todos os arquivos JSON (antigos geojsons)
     const arquivos = import.meta.glob('../data/estados/*.json', { eager: true });
 
     const features = Object.values(arquivos)
       .map((mod) => mod.default || mod)
       .filter((d) => d && d.type === 'FeatureCollection');
 
-    // Adiciona propriedade UF em cada feature com base no codarea
     const featuresComUF = features.map((geojson) => ({
       ...geojson,
       features: geojson.features.map((f) => ({
@@ -59,11 +56,15 @@ const MapaBrasil = () => {
           <GeoJSON
             key={idx}
             data={geojson}
-            style={() => ({
-              color: '#444',
-              weight: 1,
-              fillOpacity: 0,
-            })}
+            style={(feature) => {
+              const codigo = feature.properties?.codarea?.toString();
+              const visivel = estadosVisiveis.includes(codigo);
+              return {
+                color: visivel ? '#444' : 'transparent',
+                weight: visivel ? 1 : 0,
+                fillOpacity: 0,
+              };
+            }}
             onEachFeature={(feature, layer) => {
               if (feature.properties?.UF) {
                 layer.bindPopup(`UF: ${feature.properties.UF}`);

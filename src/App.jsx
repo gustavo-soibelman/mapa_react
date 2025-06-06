@@ -1,34 +1,24 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import Papa from 'papaparse';
+import estadosCSV from './data/estados.csv?raw';
 import CustomMultiSelect from './components/CustomMultiSelect';
-import MapaBrasil from './components/MapaBrasil'; // adicione essa linha no topo
+import MapaBrasil from './components/MapaBrasil';
 
 function App() {
-  const filtros = useMemo(() => ({
-    frutas: [
-      { value: 'banana', label: 'Banana' },
-      { value: 'maçã', label: 'Maçã' },
-      { value: 'laranja', label: 'Laranja' },
-      { value: 'abacaxi', label: 'Abacaxi' },
-    ],
-    cores: [
-      { value: 'azul', label: 'Azul' },
-      { value: 'vermelho', label: 'Vermelho' },
-      { value: 'verde', label: 'Verde' },
-      { value: 'amarelo', label: 'Amarelo' },
-    ],
-    animais: [
-      { value: 'gato', label: 'Gato' },
-      { value: 'cachorro', label: 'Cachorro' },
-      { value: 'leão', label: 'Leão' },
-      { value: 'tigre', label: 'Tigre' },
-    ],
-    paises: [
-      { value: 'brasil', label: 'Brasil' },
-      { value: 'argentina', label: 'Argentina' },
-      { value: 'alemanha', label: 'Alemanha' },
-      { value: 'japão', label: 'Japão' },
-    ],
-  }), []);
+  const filtros = useMemo(() => {
+    const parsed = Papa.parse(estadosCSV, {
+      header: true,
+      skipEmptyLines: true,
+    }).data;
+
+    return {
+      estado: parsed.map((e) => ({
+        label: e.UF,
+        value: e.codigo_uf,
+      })),
+      // outros filtros, se quiser, podem ir aqui
+    };
+  }, []);
 
   const [valoresSelecionados, setValoresSelecionados] = useState({});
 
@@ -47,25 +37,14 @@ function App() {
       setValoresSelecionados(novosValores);
     };
 
-    atualizarValores(); // valor inicial
-
-    const interval = setInterval(atualizarValores, 500); // atualiza a cada 500ms
-
+    atualizarValores();
+    const interval = setInterval(atualizarValores, 500);
     return () => clearInterval(interval);
   }, [filtros]);
 
-  const labels = {
-    frutas: 'Frutas (pode criar)',
-    cores: 'Cores favoritas',
-    animais: 'Animais preferidos',
-    paises: 'Países visitados',
-  };
-
   return (
-
-
-
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'Arial, sans-serif' }}>
+      {/* Sidebar */}
       <aside
         style={{
           width: '300px',
@@ -78,20 +57,30 @@ function App() {
         {Object.entries(filtros).map(([chave, opcoes]) => (
           <div key={chave} style={{ marginBottom: '20px' }}>
             <label style={{ fontWeight: 'bold' }}>
-              {labels[chave] || chave[0].toUpperCase() + chave.slice(1)}
+              {chave[0].toUpperCase() + chave.slice(1)}
             </label>
             <CustomMultiSelect
               options={opcoes}
-              allowCreate={chave === 'frutas'}
+              allowCreate={false}
               queryKey={chave}
             />
           </div>
         ))}
       </aside>
 
+      {/* Conteúdo principal */}
       <main style={{ flex: 1, padding: '40px' }}>
+        <h1>Mapa Interativo</h1>
+        <MapaBrasil
+          estadosVisiveis={
+            valoresSelecionados.estado?.includes('__all__')
+              ? filtros.estado.map((e) => e.value)
+              : valoresSelecionados.estado || []
+          }
+        />
+
+
         <h1>Valores Selecionados</h1>
-        <MapaBrasil />  {/* <-- Aqui entra o novo componente */}
         <pre
           style={{
             backgroundColor: '#eee',
