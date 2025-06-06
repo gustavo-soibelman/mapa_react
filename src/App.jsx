@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import CustomMultiSelect from './components/CustomMultiSelect';
+import MapaBrasil from './components/MapaBrasil'; // adicione essa linha no topo
 
 function App() {
   const filtros = useMemo(() => ({
@@ -61,6 +62,9 @@ function App() {
   };
 
   return (
+
+
+
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'Arial, sans-serif' }}>
       <aside
         style={{
@@ -87,6 +91,7 @@ function App() {
 
       <main style={{ flex: 1, padding: '40px' }}>
         <h1>Valores Selecionados</h1>
+        <MapaBrasil />  {/* <-- Aqui entra o novo componente */}
         <pre
           style={{
             backgroundColor: '#eee',
