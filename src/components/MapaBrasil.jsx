@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import Papa from 'papaparse';
+import estadosCSV from '../data/estados.csv?raw';
 
 const MapaBrasil = () => {
   const [geojsons, setGeojsons] = useState([]);
@@ -8,13 +10,37 @@ const MapaBrasil = () => {
   const zoomInicial = 4;
 
   useEffect(() => {
+    // Carrega metadados do CSV
+    const estadosMeta = Papa.parse(estadosCSV, {
+      header: true,
+      skipEmptyLines: true,
+    }).data;
+
+    const mapaCodigos = {};
+    estadosMeta.forEach((linha) => {
+      mapaCodigos[linha.codigo_uf] = linha.UF;
+    });
+
+    // Carrega todos os arquivos JSON (antigos geojsons)
     const arquivos = import.meta.glob('../data/estados/*.json', { eager: true });
 
     const features = Object.values(arquivos)
-      .map((mod) => (mod.default || mod))
+      .map((mod) => mod.default || mod)
       .filter((d) => d && d.type === 'FeatureCollection');
 
-    setGeojsons(features);
+    // Adiciona propriedade UF em cada feature com base no codarea
+    const featuresComUF = features.map((geojson) => ({
+      ...geojson,
+      features: geojson.features.map((f) => ({
+        ...f,
+        properties: {
+          ...f.properties,
+          UF: mapaCodigos[f.properties.codarea],
+        },
+      })),
+    }));
+
+    setGeojsons(featuresComUF);
   }, []);
 
   return (
@@ -38,6 +64,11 @@ const MapaBrasil = () => {
               weight: 1,
               fillOpacity: 0,
             })}
+            onEachFeature={(feature, layer) => {
+              if (feature.properties?.UF) {
+                layer.bindPopup(`UF: ${feature.properties.UF}`);
+              }
+            }}
           />
         ))}
       </MapContainer>
