@@ -5,12 +5,47 @@ import Papa from 'papaparse';
 import estadosCSV from '../data/estados.csv?raw';
 import _ from 'lodash';
 
-const coresQuintil = ['#f0f0f0', '#c6dbef', '#9ecae1', '#6baed6', '#08519c'];
+const coresQuintil = ['#f2efe9', '#c6dbef', '#9ecae1', '#6baed6', '#08519c'];
+
+const Legenda = ({ limites }) => {
+  const faixas = limites.map((lim, i) => {
+    const inicio = lim;
+    const fim = limites[i + 1] ? limites[i + 1] - 1 : 'ou mais';
+    return `${inicio}–${fim}`;
+  });
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        bottom: '20px',
+        right: '20px',
+        backgroundColor: '#f2efe9',
+        padding: '10px',
+        borderRadius: '5px',
+        boxShadow: '0 0 5px rgba(0,0,0,0.3)',
+        fontSize: '14px',
+        zIndex: 1000,
+      }}
+    >
+      <strong>Legenda (Experiências)</strong>
+      <div>
+        {faixas.map((faixa, idx) => (
+          <div key={idx} style={{ display: 'flex', alignItems: 'center', marginTop: '4px' }}>
+            <div style={{ width: '20px', height: '12px', backgroundColor: coresQuintil[idx], marginRight: '8px', opacity: 0.5, border:"solid, black, 2px" }}></div>
+            <span>{faixa}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const ChoroplethUF = ({ experiencias = [], estadosSelecionados = [] }) => {
   const [geojsons, setGeojsons] = useState([]);
   const [dadosUF, setDadosUF] = useState({});
   const [mapaUFs, setMapaUFs] = useState({});
+  const [quintilLimites, setQuintilLimites] = useState([]);
 
   const centerBrasil = [-14.235, -51.9253];
   const zoomInicial = 4;
@@ -45,18 +80,21 @@ const ChoroplethUF = ({ experiencias = [], estadosSelecionados = [] }) => {
     });
 
     const totais = tabelaUF.map((d) => d.total);
-    const quintilLimites = _.sortedUniq(
-      _.map(_.range(1, 6), (i) =>
-        _.nth(_.sortBy(totais), Math.floor((i - 1) * totais.length / 5))
-      )
-    );
+    const quintis = [0.2, 0.4, 0.6, 0.8].map(p => {
+      const idx = Math.floor(p * totais.length);
+      return totais.sort((a, b) => a - b)[idx];
+    });
+
+    const limites = [0, ...quintis].map(v => Math.round(v / 5) * 5);
+    setQuintilLimites(limites);
 
     const dadosComQuintil = {};
     tabelaUF.forEach(({ UF, codigo_uf, total }) => {
       let classe = 0;
-      for (let i = 0; i < quintilLimites.length; i++) {
-        if (total >= quintilLimites[i]) classe = i + 1;
+      for (let i = 0; i < limites.length; i++) {
+        if (total >= limites[i]) classe = i;
       }
+      classe = Math.min(classe, coresQuintil.length - 1);
       dadosComQuintil[codigo_uf] = { UF, codigo_uf, total, quintil: classe };
     });
 
@@ -64,7 +102,7 @@ const ChoroplethUF = ({ experiencias = [], estadosSelecionados = [] }) => {
   }, [experiencias, mapaUFs]);
 
   return (
-    <div style={{ width: '100%', height: '500px', marginBottom: '30px' }}>
+    <div style={{ width: '100%', height: '600px', marginBottom: '30px', position: 'relative' }}>
       <MapContainer center={centerBrasil} zoom={zoomInicial} style={{ width: '100%', height: '100%' }}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -91,7 +129,7 @@ const ChoroplethUF = ({ experiencias = [], estadosSelecionados = [] }) => {
                   color: '#333',
                   weight: 1,
                   fillColor: coresQuintil[quintil],
-                  fillOpacity: 0.7,
+                  fillOpacity: 0.5,
                 };
               }}
               onEachFeature={(feature, layer) => {
@@ -105,6 +143,7 @@ const ChoroplethUF = ({ experiencias = [], estadosSelecionados = [] }) => {
           );
         })}
       </MapContainer>
+      <Legenda limites={quintilLimites} />
     </div>
   );
 };
