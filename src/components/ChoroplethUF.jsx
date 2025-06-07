@@ -32,7 +32,7 @@ const Legenda = ({ limites }) => {
       <div>
         {faixas.map((faixa, idx) => (
           <div key={idx} style={{ display: 'flex', alignItems: 'center', marginTop: '4px' }}>
-            <div style={{ width: '20px', height: '12px', backgroundColor: coresQuintil[idx], marginRight: '8px', opacity: 0.5, border:"solid, black, 2px" }}></div>
+            <div style={{ width: '20px', height: '12px', backgroundColor: coresQuintil[idx], marginRight: '8px', opacity: 0.5, border: "1px solid black" }}></div>
             <span>{faixa}</span>
           </div>
         ))}
@@ -46,6 +46,7 @@ const ChoroplethUF = ({ experiencias = [], estadosSelecionados = [] }) => {
   const [dadosUF, setDadosUF] = useState({});
   const [mapaUFs, setMapaUFs] = useState({});
   const [quintilLimites, setQuintilLimites] = useState([]);
+  const [regioesUF, setRegioesUF] = useState({});
 
   const centerBrasil = [-14.235, -51.9253];
   const zoomInicial = 4;
@@ -57,10 +58,13 @@ const ChoroplethUF = ({ experiencias = [], estadosSelecionados = [] }) => {
     }).data;
 
     const mapa = {};
+    const regioes = {};
     estados.forEach((e) => {
       mapa[e.UF] = e.codigo_uf;
+      regioes[e.codigo_uf] = e.regiao;
     });
     setMapaUFs(mapa);
+    setRegioesUF(regioes);
 
     const arquivos = import.meta.glob('../data/estados/*.json', { eager: true });
     const geo = Object.values(arquivos)
@@ -76,7 +80,8 @@ const ChoroplethUF = ({ experiencias = [], estadosSelecionados = [] }) => {
 
     const tabelaUF = Object.entries(mapaUFs).map(([sigla, codigo]) => {
       const total = contagemPorUF[sigla] || 0;
-      return { UF: sigla, codigo_uf: codigo.toString(), total };
+      const regiao = regioesUF[codigo];
+      return { UF: sigla, codigo_uf: codigo.toString(), total, regiao };
     });
 
     const totais = tabelaUF.map((d) => d.total);
@@ -89,17 +94,17 @@ const ChoroplethUF = ({ experiencias = [], estadosSelecionados = [] }) => {
     setQuintilLimites(limites);
 
     const dadosComQuintil = {};
-    tabelaUF.forEach(({ UF, codigo_uf, total }) => {
+    tabelaUF.forEach(({ UF, codigo_uf, total, regiao }) => {
       let classe = 0;
       for (let i = 0; i < limites.length; i++) {
         if (total >= limites[i]) classe = i;
       }
       classe = Math.min(classe, coresQuintil.length - 1);
-      dadosComQuintil[codigo_uf] = { UF, codigo_uf, total, quintil: classe };
+      dadosComQuintil[codigo_uf] = { UF, codigo_uf, total, regiao, quintil: classe };
     });
 
     setDadosUF(dadosComQuintil);
-  }, [experiencias, mapaUFs]);
+  }, [experiencias, mapaUFs, regioesUF]);
 
   return (
     <div style={{ width: '100%', height: '600px', marginBottom: '30px', position: 'relative' }}>
@@ -136,7 +141,14 @@ const ChoroplethUF = ({ experiencias = [], estadosSelecionados = [] }) => {
                 const cod = feature.properties.codarea?.toString();
                 const info = dadosUF?.[cod];
                 if (info) {
-                  layer.bindPopup(`UF: ${info.UF}<br/>Experiências: ${info.total}`);
+                  layer.bindTooltip(`${info.UF}: ${info.total} experiências`, {
+                    sticky: true,
+                    direction: 'top',
+                    offset: [0, -10],
+                  });
+                  layer.bindPopup(
+                    `<strong>UF:</strong> ${info.UF}<br/><strong>Região:</strong> ${info.regiao}<br/><strong>Experiências:</strong> ${info.total}`
+                  );
                 }
               }}
             />
