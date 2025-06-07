@@ -2,7 +2,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import Papa from 'papaparse';
 import estadosCSV from './data/estados.csv?raw';
 import CustomMultiSelect from './components/CustomMultiSelect';
-import MapaBrasil from './components/MapaBrasil';
+import ChoroplethUF from './components/ChoroplethUF';
+import experienciasCSV from './data/experiencias_selecionadas_mapa.csv?raw';
 
 function App() {
   const filtros = useMemo(() => {
@@ -16,11 +17,11 @@ function App() {
         label: e.UF,
         value: e.codigo_uf,
       })),
-      // outros filtros, se quiser, podem ir aqui
     };
   }, []);
 
   const [valoresSelecionados, setValoresSelecionados] = useState({});
+  const [dadosExperiencias, setDadosExperiencias] = useState([]);
 
   useEffect(() => {
     const atualizarValores = () => {
@@ -42,9 +43,24 @@ function App() {
     return () => clearInterval(interval);
   }, [filtros]);
 
+  useEffect(() => {
+    const parsed = Papa.parse(experienciasCSV, {
+      header: true,
+      skipEmptyLines: true,
+    }).data;
+
+    setDadosExperiencias(parsed);
+  }, []);
+
+  const estadosFiltrados = useMemo(() => {
+    if (valoresSelecionados.estado?.includes('__all__')) {
+      return filtros.estado.map((e) => e.value);
+    }
+    return valoresSelecionados.estado || [];
+  }, [valoresSelecionados, filtros]);
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'Arial, sans-serif' }}>
-      {/* Sidebar */}
       <aside
         style={{
           width: '300px',
@@ -68,29 +84,12 @@ function App() {
         ))}
       </aside>
 
-      {/* Conteúdo principal */}
       <main style={{ flex: 1, padding: '40px' }}>
-        <h1>Mapa Interativo</h1>
-        <MapaBrasil
-          estadosVisiveis={
-            valoresSelecionados.estado?.includes('__all__')
-              ? filtros.estado.map((e) => e.value)
-              : valoresSelecionados.estado || []
-          }
+        <h1>Mapa Coroplético por UF</h1>
+        <ChoroplethUF
+          experiencias={dadosExperiencias}
+          estadosSelecionados={estadosFiltrados}
         />
-
-
-        <h1>Valores Selecionados</h1>
-        <pre
-          style={{
-            backgroundColor: '#eee',
-            padding: '20px',
-            borderRadius: '8px',
-            fontSize: '16px',
-          }}
-        >
-          {JSON.stringify(valoresSelecionados, null, 2)}
-        </pre>
       </main>
     </div>
   );
