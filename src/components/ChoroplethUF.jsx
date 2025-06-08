@@ -100,14 +100,15 @@ const ChoroplethUF = ({ experiencias = [], estadosSelecionados = [] }) => {
         if (total >= limites[i]) classe = i;
       }
       classe = Math.min(classe, coresQuintil.length - 1);
-      dadosComQuintil[codigo_uf] = { UF, codigo_uf, total, regiao, quintil: classe };
+      const experienciasUF = experiencias.filter(e => e.estado === UF);
+      dadosComQuintil[codigo_uf] = { UF, codigo_uf, total, regiao, quintil: classe, experiencias: experienciasUF };
     });
 
     setDadosUF(dadosComQuintil);
   }, [experiencias, mapaUFs, regioesUF]);
 
   return (
-    <div style={{ width: '100%', height: '600px', marginBottom: '30px', position: 'relative' }}>
+    <div style={{ width: '100%', height: '100vh', position: 'relative' }}>
       <MapContainer center={centerBrasil} zoom={zoomInicial} style={{ width: '100%', height: '100%' }}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -146,8 +147,34 @@ const ChoroplethUF = ({ experiencias = [], estadosSelecionados = [] }) => {
                     direction: 'top',
                     offset: [0, -10],
                   });
+
+                  let tabela = `
+                    <div style="max-height:300px; overflow-y:auto;">
+                      <table style="margin-top:8px;font-size:10px;border-collapse:collapse;width:100%;">
+                        <thead>
+                          <tr>
+                            <th style="text-align:left;border-bottom:1px solid #ccc;padding:4px;">Título</th>
+                            <th style="text-align:left;border-bottom:1px solid #ccc;padding:4px;">Palavras-chave</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                  `;
+
+                  info.experiencias.forEach(e => {
+                    const palavras = [e.palavras_chave_saude_digital, e.palavras_chave_APS].filter(Boolean).join(' | ');
+                    tabela += `<tr><td style="padding:4px;"><a href="${e.link_experiencia}" target="_blank">${e.titulo}</a></td><td style="padding:4px;">${palavras}</td></tr>`;
+                  });
+
+                  tabela += '</tbody></table></div>';
+
                   layer.bindPopup(
-                    `<strong>UF:</strong> ${info.UF}<br/><strong>Região:</strong> ${info.regiao}<br/><strong>Experiências:</strong> ${info.total}`
+                    `<div style="width: 100%; max-width: 600px; padding: 10px; box-sizing: border-box;">
+                      <strong>UF:</strong> ${info.UF}<br/>
+                      <strong>Região:</strong> ${info.regiao}<br/>
+                      <strong>Experiências:</strong> ${info.total}
+                      ${tabela}
+                    </div>`,
+                    { maxWidth: "auto" }
                   );
                 }
               }}

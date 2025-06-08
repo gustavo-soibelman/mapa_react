@@ -66,3 +66,25 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+/* Removido: desnecessário ou conflitante */
+/*
+.leaflet-popup-content-wrapper {
+  overflow: auto !important;
+  max-width: none !important;
+  width: auto !important;
+}
+
+.leaflet-popup-tip-container {
+  display: flexbox !important;
+}
+
+.leaflet-popup-tip {
+  background: white !important;
+}
+*/
+
+/* Novo: pode manter se quiser estilizar ainda mais o popup visualmente */
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}

@@ -60,13 +60,26 @@ function App() {
   }, [valoresSelecionados, filtros]);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'Arial, sans-serif' }}>
+    <div style={{ position: 'relative', height: '100vh', width: '100vw', fontFamily: 'Arial, sans-serif' }}>
+      {/* Mapa em fundo total */}
+      <ChoroplethUF
+        experiencias={dadosExperiencias}
+        estadosSelecionados={estadosFiltrados}
+      />
+
+      {/* Sidebar flutuando sobre o mapa */}
       <aside
         style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
           width: '300px',
+          height: '100%',
           padding: '20px',
-          backgroundColor: '#f2f2f2',
+          backgroundColor: 'rgba(242, 242, 242, 0.95)',
           borderRight: '1px solid #ccc',
+          overflowY: 'auto',
+          zIndex: 1001,
         }}
       >
         <h2>Filtros</h2>
@@ -83,14 +96,6 @@ function App() {
           </div>
         ))}
       </aside>
-
-      <main style={{ flex: 1, padding: '40px' }}>
-        <h1>Mapa Coroplético por UF</h1>
-        <ChoroplethUF
-          experiencias={dadosExperiencias}
-          estadosSelecionados={estadosFiltrados}
-        />
-      </main>
     </div>
   );
 }
