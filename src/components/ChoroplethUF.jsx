@@ -153,16 +153,20 @@ const ChoroplethUF = ({ experiencias = [], estadosSelecionados = [] }) => {
                       <table style="margin-top:8px;font-size:10px;border-collapse:collapse;width:100%;">
                         <thead>
                           <tr>
-                            <th style="text-align:left;border-bottom:1px solid #ccc;padding:4px;">Título</th>
-                            <th style="text-align:left;border-bottom:1px solid #ccc;padding:4px;">Palavras-chave</th>
+                            <th style="text-align:left;border:1px solid #ccc;padding:4px;">Título</th>
+                            <th style="text-align:left;border:1px solid #ccc;padding:4px;">Palavras-chave Tecnologia</th>
+                            <th style="text-align:left;border:1px solid #ccc;padding:4px;">Palavras-chave APS</th>
                           </tr>
                         </thead>
                         <tbody>
                   `;
 
                   info.experiencias.forEach(e => {
-                    const palavras = [e.palavras_chave_saude_digital, e.palavras_chave_APS].filter(Boolean).join(' | ');
-                    tabela += `<tr><td style="padding:4px;"><a href="${e.link_experiencia}" target="_blank">${e.titulo}</a></td><td style="padding:4px;">${palavras}</td></tr>`;
+                    tabela += `<tr>
+                      <td style="padding:4px;border:1px solid #ccc;"><a href="${e.link_experiencia}" target="_blank">${e.titulo}</a></td>
+                      <td style="padding:4px;border:1px solid #ccc;">${e.palavras_chave_saude_digital || ''}</td>
+                      <td style="padding:4px;border:1px solid #ccc;">${e.palavras_chave_APS || ''}</td>
+                    </tr>`;
                   });
 
                   tabela += '</tbody></table></div>';
